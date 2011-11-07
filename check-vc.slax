@@ -18,7 +18,6 @@ ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
 ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
 import "../import/junos.xsl";
 
-
 match / {
     <op-script-results> {
 
@@ -26,13 +25,16 @@ match / {
 *    dump all VC stats
 */
 
+        var $connection = jcs:open();
         var $rpc = {
             <get-virtual-chassis-port-statistics> {
                 <brief>;
             }
         }
 
-    var $switch-output = jcs:invoke($rpc);
+    var $switch-output = jcs:execute( $connection, $rpc );
+/*    var $switch-output = jcs:invoke($rpc); */
+    expr jcs:close( $connection );
 
 /*
 *    this block takes each port name, and iterates through them, and prints
