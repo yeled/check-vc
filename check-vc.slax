@@ -49,19 +49,19 @@ match / {
         var $output-bytes = ../output-bytes;
         var $input-packets = ../input-packets;
         var $output-packets = ../output-packets;
-        /* call pretty-print($fpc-name = $fpc-name,$port-name = $port-name,$input-bytes = $input-bytes,$output-bytes = $output-bytes, $input-packets = $input-packets, $output-packets = $output-packets); */
+        /* call pretty-print($fpc-name,$port-name,$input-bytes,$output-bytes,$input-packets,$output-packets); */
 
 /*
 *   for each stat, call the template and push it into snmp
 */
 
-        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $input-packets,$object-name = "input-packets");
+        call fetch-object($fpc-name,$port-name,$fetch-object = $input-packets,$object-name = "input-packets");
         /* <output> jcs:printf("%-16s%s-%s: %12s","input-packets:",$fpc-name,$port-name,$input-packets); */
-        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $output-packets,$object-name = "output-packets");
+        call fetch-object($fpc-name,$port-name,$fetch-object = $output-packets,$object-name = "output-packets");
         /* <output> jcs:printf("%-16s%s-%s: %12s","output-packets:",$fpc-name,$port-name,$output-packets); */
-        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $input-bytes,$object-name = "input-bytes");
+        call fetch-object($fpc-name,$port-name,$fetch-object = $input-bytes,$object-name = "input-bytes");
         /* <output> jcs:printf("%-16s%s-%s: %12s","input-bytes:",$fpc-name,$port-name,$input-bytes); */
-        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $output-bytes,$object-name = "output-bytes");
+        call fetch-object($fpc-name,$port-name,$fetch-object = $output-bytes,$object-name = "output-bytes");
         /* <output> jcs:printf("%-16s%s-%s: %12s","output-bytes:",$fpc-name,$port-name,$output-bytes); */
         }
     }
