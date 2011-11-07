@@ -1,0 +1,79 @@
+/*
+*
+*   check-vc.slax is a proof-of-concept poller for the internal PFE and VC
+*   ports. It pushes the traffic stats as found: root@switch> show
+*   virtual-chassis vc-port statistics into a bunch of rows. If the
+*   interface names stay the same, the OIDs should do so as well. YMMV.
+*
+*   WARNING!! On a 3 member EX4200-24T stack, this takes almost 3 minutes to
+*   run, and drives the load up to 1.75! I found that on a 2 member
+*   EX4200-24T stack, it only takes 1 minute, so the load is less
+*   noticeable. I imagine that a highly loaded switch might fall over.
+*
+*/
+
+version 1.0;
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+import "../import/junos.xsl";
+
+
+match / {
+    <op-script-results> {
+
+/*
+*    dump all VC stats
+*/
+
+        var $rpc = {
+            <get-virtual-chassis-port-statistics> {
+                <brief>;
+            }
+        }
+
+    var $switch-output = jcs:invoke($rpc);
+
+/*
+*    this block takes each port name, and iterates through them, and prints
+*    them via templates. the FPC is found by moving back a few blocks. it
+*    could be prettier.
+*/
+
+    for-each ($switch-output//port-name) {
+        var $port-name = ../port-name;
+        var $fpc-name = $port-name/../../../..//re-name;
+        var $input-bytes = ../input-bytes;
+        var $output-bytes = ../output-bytes;
+        var $input-packets = ../input-packets;
+        var $output-packets = ../output-packets;
+        /* call pretty-print($fpc-name = $fpc-name,$port-name = $port-name,$input-bytes = $input-bytes,$output-bytes = $output-bytes, $input-packets = $input-packets, $output-packets = $output-packets); */
+
+/*
+*   for each stat, call the template and push it into snmp
+*/
+
+        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $input-packets,$object-name = "input-packets");
+        /* <output> jcs:printf("%-16s%s-%s: %12s","input-packets:",$fpc-name,$port-name,$input-packets); */
+        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $output-packets,$object-name = "output-packets");
+        /* <output> jcs:printf("%-16s%s-%s: %12s","output-packets:",$fpc-name,$port-name,$output-packets); */
+        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $input-bytes,$object-name = "input-bytes");
+        /* <output> jcs:printf("%-16s%s-%s: %12s","input-bytes:",$fpc-name,$port-name,$input-bytes); */
+        call fetch-object($fpc-name = $fpc-name,$port-name = $port-name,$fetch-object = $output-bytes,$object-name = "output-bytes");
+        /* <output> jcs:printf("%-16s%s-%s: %12s","output-bytes:",$fpc-name,$port-name,$output-bytes); */
+        }
+    }
+}
+
+/*
+*   push the data into snmp in a first-come-first-served basis
+*/
+
+template fetch-object($fpc-name,$port-name,$object-name,$fetch-object) {
+    var $rpc-input-bytes = <request-snmp-utility-mib-set> {
+        <object-type> "counter64";
+        <instance> $fpc-name _ "-" _ $port-name _ "-" _ $object-name;
+        <object-value> $fetch-object;
+    }
+    var $results-input-bytes = jcs:invoke($rpc-input-bytes);
+}
