@@ -83,5 +83,6 @@ template fetch-object($fpc-name,$port-name,$object-name,$fetch-object) {
     /* var $results-input-bytes = jcs:invoke($rpc-input-bytes); */
     var $rpc-snmp-set = jcs:open();
         var $results-input-bytes = jcs:execute ( $rpc-snmp-set, $rpc-input-bytes );
+        expr jcs:trace('setting snmp oid');
     expr jcs:close( $rpc-snmp-set );
 }
